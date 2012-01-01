@@ -25,7 +25,9 @@ class Ball extends Sprite
     #@x = (@x+@vector.x) % xmax
     #@y = (@y+@vector.y) % ymax
     @x = Math.max 0, Math.min @x+@vector.x, xmax-64
-    @y = Math.max 0, Math.min @y+@vector.y, ymax-64
+    @y = (Math.max 0, @y+@vector.y) % ymax
+
+    #@y = Math.max 0, Math.min @y+@vector.y, ymax-64
 
 class MyGame extends Game
   constructor: (width, height)->
@@ -40,7 +42,7 @@ class MyGame extends Game
       @i = 0
       @direction = true
       @ball = new Ball (@)
-      #@ball.down(5)
+      @ball.down(5)
       @ball.addEventListener 'enterframe', (e)->
         if @game.input.right
           @right()
@@ -85,7 +87,7 @@ class MyGame extends Game
       itv = event.interval
 
       @ball.vector.x = acg.x*15
-      @ball.vector.y = -acg.y*15
+      #@ball.vector.y = -acg.y*15
 
       #@label_x.text = "#{acc.x}"
       #@label_y.text = "#{acc.y}"
