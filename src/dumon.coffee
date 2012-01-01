@@ -40,7 +40,6 @@ class MyGame extends Game
 
     @onload = ->
       @i = 0
-      @direction = true
       @ball = new Ball (@)
       @ball.down(5)
       @ball.addEventListener 'enterframe', (e)->
@@ -56,22 +55,22 @@ class MyGame extends Game
         @update width, height
 
         if @game.direction
-          @game.i++
-        else
           @game.i--
+        else
+          @game.i++
 
         @frame = @game.i % 24
 
       @rootScene.addChild @ball
 
-      # @label_x = new Label "X"
+      @label_x = new Label "X"
       # @label_y = new Label "Y"
       # @label_z = new Label "Z"
       # @label_vector = new Label "Vector"
       # @label_y.y = 30
       # @label_z.y = 60
       # @label_vector.y = 90
-      # @rootScene.addChild @label_x
+      @rootScene.addChild @label_x
       # @rootScene.addChild @label_y
       # @rootScene.addChild @label_z
       # @rootScene.addChild @label_vector
@@ -88,6 +87,13 @@ class MyGame extends Game
 
       @ball.vector.x = acg.x*15
       #@ball.vector.y = -acg.y*15
+
+      if acg.x > 0
+        @direction = true
+      else
+        @direction = false
+
+      @label_x.text = "#{@direction}"
 
       #@label_x.text = "#{acc.x}"
       #@label_y.text = "#{acc.y}"
