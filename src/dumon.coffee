@@ -21,8 +21,11 @@ class Ball extends Sprite
     @vector.y += move
 
   update: (xmax,ymax) ->
-    @x = (@x+@vector.x) % xmax
-    @y = (@y+@vector.y) % ymax
+    #@game.label_vector.text = "#{@vector.x}/#{@vector.y}"
+    #@x = (@x+@vector.x) % xmax
+    #@y = (@y+@vector.y) % ymax
+    @x = Math.max 0, Math.min @x+@vector.x, xmax-64
+    @y = Math.max 0, Math.min @y+@vector.y, ymax-64
 
 class MyGame extends Game
   constructor: (width, height)->
@@ -31,11 +34,13 @@ class MyGame extends Game
     @fps = 24
     @preload  '/img/sp.png'
 
+    addEventListener 'devicemotion', @onMotion, false
+
     @onload = ->
       @i = 0
       @direction = true
       @ball = new Ball (@)
-      @ball.down(5)
+      #@ball.down(5)
       @ball.addEventListener 'enterframe', (e)->
         if @game.input.right
           @right()
@@ -56,10 +61,38 @@ class MyGame extends Game
         @frame = @game.i % 24
 
       @rootScene.addChild @ball
+
+      # @label_x = new Label "X"
+      # @label_y = new Label "Y"
+      # @label_z = new Label "Z"
+      # @label_vector = new Label "Vector"
+      # @label_y.y = 30
+      # @label_z.y = 60
+      # @label_vector.y = 90
+      # @rootScene.addChild @label_x
+      # @rootScene.addChild @label_y
+      # @rootScene.addChild @label_z
+      # @rootScene.addChild @label_vector
       @rootScene.backgroundColor = 'rgb(182, 255, 255)'
 
     @start()
 
+  onMotion: (event)=>
+    if event
+      acc = event.acceleration
+      acg = event.accelerationIncludingGravity
+      rot = event.rotationRate
+      itv = event.interval
+
+      @ball.vector.x = acg.x*15
+      @ball.vector.y = -acg.y*15
+
+      #@label_x.text = "#{acc.x}"
+      #@label_y.text = "#{acc.y}"
+      #@label_z.text = "#{acc.z}"
+
 window.onload = ->
   game = new MyGame 320, 240
+
+
 
