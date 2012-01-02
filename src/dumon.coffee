@@ -6,9 +6,10 @@ class Ball extends Sprite
     @x = 32
     @y = 32
     @velocity = {'x': 0, 'y': 0}
+    @acceleration = {'x', 0, 'y': 0.3}
     @image = @game.assets['/img/sp.png']
 
-    console.log @
+    @gate = true
 
   right: (move=1)->
     @velocity.x += move
@@ -23,8 +24,22 @@ class Ball extends Sprite
     @velocity.y += move
 
   update: (xmax,ymax) ->
-    @moveTo (Math.max 0, Math.min @x+@velocity.x, xmax-64),
-            (Math.max 0, @y+@velocity.y) % ymax
+    if @gate and @y >= ymax-64
+      @velocity.y = - @velocity.y * 0.4
+      @acceleration.y = 0.7
+      @gate = false
+
+    else
+      @velocity.y += @acceleration.y
+
+    new_y = @y+@velocity.y
+    if new_y > ymax
+      new_y = 0
+      @gate = true
+      @acceleration.y = 0.3
+
+    @moveTo (Math.max 0, Math.min @x+@velocity.x, xmax-64), new_y
+
 
 class MyGame extends Game
   constructor: (width, height)->
@@ -39,6 +54,7 @@ class MyGame extends Game
       @i = 0
       @ball = new Ball (@)
       @ball.down(5)
+      @direction = true
 
       @release = false
       @addEventListener 'rightbuttondown', (e)->
@@ -72,6 +88,7 @@ class MyGame extends Game
 
         @update width, height
 
+        @game.label_x.text = "#{@game.direction}"
         if @game.direction
           @game.i--
         else
@@ -101,8 +118,6 @@ class MyGame extends Game
         @direction = true
       else
         @direction = false
-
-      @label_x.text = "#{@direction}"
 
 window.onload = ->
   game = new MyGame 320, 240
