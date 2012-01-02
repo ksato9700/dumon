@@ -4,14 +4,20 @@
 enchant()
 
 config =
-  key_init_x_velocity: 15
-  key_last_x_velocity: 10
+  key_init_x_acceleration: 2.5
+  key_init_x_velocity: 2
+  key_release_decay: 0.75
   init_y_velocity: 5
   init_y_acceleration: 0.3
   last_y_acceleration: 0.9
-  release_decay: 0.75
-  bouncing_decay: 0.4
+  bouncing_decay_bottom: 0.4
+  bouncing_decay_side: 0.8
   device_acc_multiplier: 5
+
+class Wall extends Sprite
+  constructor: (@game, x, y, w, h) ->
+    super w, h
+    @moveTo x, y
 
 class Ball extends Sprite
   constructor: (@game) ->
@@ -20,22 +26,29 @@ class Ball extends Sprite
 
     @direction = true
     @velocity = {'x': 0, 'y': config.init_y_velocity}
-    @acceleration = {'x', 0, 'y': config.init_y_acceleration}
+    @acceleration = {'x': 0, 'y': config.init_y_acceleration}
     @image = @game.assets['/img/sp.png']
 
     @gate = true
+    @release = false
 
-  right: (move=1)->
-    @velocity.x += move
+  right: ->
+    @release = false
+    @direction = true
+    if @acceleration.x > 0
+      @acceleration.x = Math.floor @acceleration.x/2
+    else
+      @velocity.x +=  config.key_init_x_velocity
+      @acceleration.x = config.key_init_x_acceleration
 
-  left: (move=1)->
-    @velocity.x -= move
-
-  up: (move=1)->
-    @velocity.y -= move
-
-  down: (move=1)->
-    @velocity.y += move
+  left: ->
+    @release = false
+    @direction = false
+    if @acceleration.x < 0
+      @acceleration.x = Math.ceil @acceleration.x/2
+    else
+      @velocity.x -=  config.key_init_x_velocity
+      @acceleration.x = -config.key_init_x_acceleration
 
   update: ->
     @game.label_x.text = "#{@direction}"
@@ -44,13 +57,34 @@ class Ball extends Sprite
 
     @frame = (if @direction then @frame-1 else @frame+1) % @game.fps
 
-    if @gate and @y >= ymax-64
-      @velocity.y = - @velocity.y * config.bouncing_decay
-      @acceleration.y = config.last_y_acceleration
-      @gate = false
+    # x-axis
+
+    if @intersect @game.wall_l
+      if @velocity.x <0
+        @velocity.x = - @velocity.x * config.bouncing_decay_side
+
+    else if @intersect @game.wall_r
+      if @velocity.x >0
+        @velocity.x = - @velocity.x * config.bouncing_decay_side
+
+    if @release
+      @acceleration.x = 0
+      @velocity.x *= config.key_release_decay
+      @velocity.x = Math[if @velocity.x>0 then "floor" else "ceil"] @velocity.x
 
     else
+      @velocity.x += @acceleration.x
+
+    # y-axis
+
+    if @gate and @intersect @game.wall_b
+      @velocity.y = - @velocity.y * config.bouncing_decay_bottom
+      @acceleration.y = config.last_y_acceleration
+      @gate = false
+    else
       @velocity.y += @acceleration.y
+
+    @velocity.y = Math.min @velocity.y, 20
 
     new_y = @y+@velocity.y
     if new_y > ymax
@@ -58,8 +92,7 @@ class Ball extends Sprite
       @gate = true
       @acceleration.y = config.init_y_acceleration
 
-    @moveTo (Math.max 0, Math.min @x+@velocity.x, xmax-64), new_y
-
+    @moveTo @x+@velocity.x, new_y
 
 class MyGame extends Game
   constructor: (width, height)->
@@ -71,40 +104,30 @@ class MyGame extends Game
     addEventListener 'devicemotion', @onMotion, false
 
     @onload = ->
-      @ball = new Ball (@)
-
-      @release = false
+      @ball = new Ball @
+      @wall_b = new Wall @, 0 , height-1, width, 1
+      @wall_l = new Wall @, 0,       0, 1, height
+      @wall_r = new Wall @, width-1, 0, 1, height
 
       @addEventListener 'rightbuttondown', (e)->
-        @release = false
-        @ball.direction = true
-        if @ball.velocity.x > 0
-          @ball.velocity.x = Math.max @ball.velocity.x/2, config.key_last_x_velocity
-        else
-          @ball.velocity.x = config.key_init_x_velocity
+        @ball.right()
 
       @addEventListener 'rightbuttonup', (e)->
-        @release = true
+        @ball.release = true
 
       @addEventListener 'leftbuttondown', (e)->
-        @ball.direction = false
-        @release = false
-        if @ball.velocity.x < 0
-          @ball.velocity.x = Math.min @ball.velocity.x/2, -config.key_last_x_velocity
-        else
-          @ball.velocity.x = -config.key_init_x_velocity
+        @ball.left()
 
       @addEventListener 'leftbuttonup', (e)->
-        @release = true
+        @ball.release = true
 
       @ball.addEventListener 'enterframe', (e)->
-        if @game.release
-          @velocity.x *= config.release_decay
-          @velocity.x = Math[if @velocity.x>0 then "floor" else "ceil"] @velocity.x
-
         @update()
 
       @rootScene.addChild @ball
+      @rootScene.addChild @wall_b
+      @rootScene.addChild @wall_l
+      @rootScene.addChild @wall_r
 
       @label_x = new Label "X"
       @rootScene.addChild @label_x
@@ -115,7 +138,6 @@ class MyGame extends Game
 
   onMotion: (event)=>
     if event
-      @release = false
       acc = event.acceleration
       acg = event.accelerationIncludingGravity
       rot = event.rotationRate
