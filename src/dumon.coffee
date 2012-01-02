@@ -28,6 +28,7 @@ class Ball extends Sprite
     @velocity = {'x': 0, 'y': config.init_y_velocity}
     @acceleration = {'x': 0, 'y': config.init_y_acceleration}
     @image = @game.assets['/img/sp.png']
+    #@s1 = @game.assets['/sound/s1.mp3']
 
     @gate = true
     @release = false
@@ -78,6 +79,9 @@ class Ball extends Sprite
     # y-axis
 
     if @gate and @intersect @game.wall_b
+      # s1 = @s1.clone()
+      # s1.volume = 0.5
+      # s1.play()
       @velocity.y = - @velocity.y * config.bouncing_decay_bottom
       @acceleration.y = config.last_y_acceleration
       @gate = false
@@ -99,7 +103,8 @@ class MyGame extends Game
     super width, height
 
     @fps = 24
-    @preload  '/img/sp.png'
+    @preload '/img/sp.png'
+    #@preload '/sound/s1.mp3'
 
     addEventListener 'devicemotion', @onMotion, false
 
