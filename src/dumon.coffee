@@ -14,43 +14,11 @@ config =
   bouncing_decay_side: 0.8
   device_acc_multiplier: 5
 
-map_data = [
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  [ 0, -1, -1,  0, -1, -1,  0, -1, -1,  0]
-  ]
-
-collision_data = [
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [ 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
-]
-
-class MyMap extends Map
-  constructor: (@game, w, h) ->
-    super(w,h)
-    @image = @game.assets['/img/map.png']
-    @loadData map_data
-    @collisionData = collision_data
-
 class Wall extends Sprite
-  constructor: (@game, x, y, w, h) ->
+  constructor: (@game, x, y, w, h, image) ->
     super w, h
     @moveTo x, y
+    @image = @game.assets[image]
 
 class Ball extends Sprite
   constructor: (@game) ->
@@ -63,7 +31,6 @@ class Ball extends Sprite
     @image = @game.assets['/img/sp.png']
     @s1 = @game.assets['/sound/s1.mp3']
 
-    @gate = true
     @release = false
 
   right: ->
@@ -111,34 +78,22 @@ class Ball extends Sprite
 
     # y-axis
 
-    # if @gate and @intersect @game.wall_b
-    #   # s1 = @s1.clone()
-    #   @s1.volume = 0.5
-    #   @s1.stop()
-    #   @s1.play()
-    #   @velocity.y = - @velocity.y * config.bouncing_decay_bottom
-    #   @acceleration.y = config.last_y_acceleration
-    #   @gate = false
-    # else
-    #   @velocity.y += @acceleration.y
+    withins = (@within wall_b for wall_b in @game.wall_bs)
 
-    if @game.map.hitTest @x, @y
-      # s1 = @s1.clone()
-      @s1.volume = 0.5
-      @s1.stop()
-      @s1.play()
+    if (withins.reduce (x,y)->x or y)
+      # @s1.volume = 0.5
+      # @s1.stop()
+      # @s1.play()
       @velocity.y = - @velocity.y * config.bouncing_decay_bottom
       @acceleration.y = config.last_y_acceleration
-      @gate = false
     else
       @velocity.y += @acceleration.y
 
     @velocity.y = Math.min @velocity.y, 20
 
     new_y = @y+@velocity.y
-    if new_y > ymax
+    if new_y >= ymax
       new_y = 0
-      @gate = true
       @acceleration.y = config.init_y_acceleration
 
     @moveTo @x+@velocity.x, new_y
@@ -149,6 +104,7 @@ class MyGame extends Game
 
     @fps = 24
     @preload '/img/sp.png'
+    @preload '/img/sidewall.png'
     @preload '/img/map.png'
     @preload '/sound/s1.mp3'
 
@@ -156,10 +112,11 @@ class MyGame extends Game
 
     @onload = ->
       @ball = new Ball @
-      @wall_b = new Wall @, 0 , height-1, width, 1
-      @wall_l = new Wall @, 0,       0, 1, height
-      @wall_r = new Wall @, width-1, 0, 1, height
-      @map = new MyMap @, 32, 32
+
+      @wall_bs = (new Wall @, x  , height-16, 16, 16, '/img/map.png' for x in [0,96,192,288])
+
+      @wall_l = new Wall @, 0,       0, 5, height, '/img/sidewall.png'
+      @wall_r = new Wall @, width-5, 0, 5, height, '/img/sidewall.png'
 
       @addEventListener 'rightbuttondown', (e)->
         @ball.right()
@@ -177,12 +134,12 @@ class MyGame extends Game
         @update()
 
       @rootScene.addChild @ball
-      @rootScene.addChild @wall_b
+      @rootScene.addChild wall_b for wall_b in @wall_bs
       @rootScene.addChild @wall_l
       @rootScene.addChild @wall_r
-      @rootScene.addChild @map
 
       @label_x = new Label "X"
+      @label_x.x = 20
       @rootScene.addChild @label_x
 
       @rootScene.backgroundColor = 'rgb(182, 255, 255)'
