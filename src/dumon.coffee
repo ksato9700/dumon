@@ -14,6 +14,39 @@ config =
   bouncing_decay_side: 0.8
   device_acc_multiplier: 5
 
+map_data = [
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+  [ 0, -1, -1,  0, -1, -1,  0, -1, -1,  0]
+  ]
+
+collision_data = [
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [ 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+]
+
+class MyMap extends Map
+  constructor: (@game, w, h) ->
+    super(w,h)
+    @image = @game.assets['/img/map.png']
+    @loadData map_data
+    @collisionData = collision_data
+
 class Wall extends Sprite
   constructor: (@game, x, y, w, h) ->
     super w, h
@@ -78,7 +111,18 @@ class Ball extends Sprite
 
     # y-axis
 
-    if @gate and @intersect @game.wall_b
+    # if @gate and @intersect @game.wall_b
+    #   # s1 = @s1.clone()
+    #   @s1.volume = 0.5
+    #   @s1.stop()
+    #   @s1.play()
+    #   @velocity.y = - @velocity.y * config.bouncing_decay_bottom
+    #   @acceleration.y = config.last_y_acceleration
+    #   @gate = false
+    # else
+    #   @velocity.y += @acceleration.y
+
+    if @game.map.hitTest @x, @y
       # s1 = @s1.clone()
       @s1.volume = 0.5
       @s1.stop()
@@ -105,6 +149,7 @@ class MyGame extends Game
 
     @fps = 24
     @preload '/img/sp.png'
+    @preload '/img/map.png'
     @preload '/sound/s1.mp3'
 
     addEventListener 'devicemotion', @onMotion, false
@@ -114,6 +159,7 @@ class MyGame extends Game
       @wall_b = new Wall @, 0 , height-1, width, 1
       @wall_l = new Wall @, 0,       0, 1, height
       @wall_r = new Wall @, width-1, 0, 1, height
+      @map = new MyMap @, 32, 32
 
       @addEventListener 'rightbuttondown', (e)->
         @ball.right()
@@ -134,6 +180,7 @@ class MyGame extends Game
       @rootScene.addChild @wall_b
       @rootScene.addChild @wall_l
       @rootScene.addChild @wall_r
+      @rootScene.addChild @map
 
       @label_x = new Label "X"
       @rootScene.addChild @label_x
@@ -157,7 +204,7 @@ class MyGame extends Game
         @ball.direction = false
 
 window.onload = ->
-  game = new MyGame 320, 240
+  game = new MyGame 320, 320
 
 
 
