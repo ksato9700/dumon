@@ -23,7 +23,7 @@ class Wall extends Sprite
 class Ball extends Sprite
   constructor: (@game) ->
     super 64,64
-    @moveTo 32, 32
+    @moveTo 128, 0
 
     @direction = true
     @velocity = {'x': 0, 'y': config.init_y_velocity}
@@ -31,7 +31,7 @@ class Ball extends Sprite
     @image = @game.assets['/img/sp.png']
     @s1 = @game.assets['/sound/s1.mp3']
 
-    @release = false
+    @release = true
 
   right: ->
     @release = false
@@ -52,7 +52,8 @@ class Ball extends Sprite
       @acceleration.x = -config.key_init_x_acceleration
 
   update: ->
-    @game.label_x.text = "#{@direction}"
+    #@game.label_x.text = "#{@direction}"
+    @game.label_x.text = "#{@release}"
     xmax = @game.width
     ymax = @game.height
 
@@ -81,11 +82,22 @@ class Ball extends Sprite
     withins = (@within wall_b for wall_b in @game.wall_bs)
 
     if (withins.reduce (x,y)->x or y)
-      # @s1.volume = 0.5
-      # @s1.stop()
-      # @s1.play()
+      @bouncing = true
+        # @s1.volume = 0.5
+        # @s1.stop()
+        # @s1.play()
       @velocity.y = - @velocity.y * config.bouncing_decay_bottom
       @acceleration.y = config.last_y_acceleration
+
+      if 0 < @x <= 80
+        target = 32
+      else if 80 < @x <= 176
+        target = 128
+      else
+        target = 224
+      @velocity.x = (target - @x)/3.0
+      @velocity.x = Math[if @velocity.x>0 then "ceil" else "floor"] @velocity.x
+
     else
       @velocity.y += @acceleration.y
 
@@ -95,8 +107,11 @@ class Ball extends Sprite
     if new_y >= ymax
       new_y = 0
       @acceleration.y = config.init_y_acceleration
+      @bouncing = false
 
-    @moveTo @x+@velocity.x, new_y
+    new_x = Math.round @x+@velocity.x
+
+    @moveTo new_x, new_y
 
 class MyGame extends Game
   constructor: (width, height)->
@@ -113,7 +128,7 @@ class MyGame extends Game
     @onload = ->
       @ball = new Ball @
 
-      @wall_bs = (new Wall @, x  , height-16, 16, 16, '/img/map.png' for x in [0,96,192,288])
+      @wall_bs = (new Wall @, x  , height-32, 32, 32, '/img/map.png' for x in [0,96,192,288])
 
       @wall_l = new Wall @, 0,       0, 5, height, '/img/sidewall.png'
       @wall_r = new Wall @, width-5, 0, 5, height, '/img/sidewall.png'
@@ -153,12 +168,13 @@ class MyGame extends Game
       rot = event.rotationRate
       itv = event.interval
 
-      @ball.velocity.x = acg.x * config.device_acc_multiplier
+      if not @ball.bouncing
+        @ball.velocity.x = acg.x * config.device_acc_multiplier
 
-      if acg.x > 0
-        @ball.direction = true
-      else
-        @ball.direction = false
+        if acg.x > 0
+          @ball.direction = true
+        else
+          @ball.direction = false
 
 window.onload = ->
   game = new MyGame 320, 320
