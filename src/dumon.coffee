@@ -7,12 +7,12 @@ config =
   key_init_x_acceleration: 2.5
   key_init_x_velocity: 2
   key_release_decay: 0.75
-  init_y_velocity: 5
-  init_y_acceleration: 0.3
+  init_y_velocity: 3
+  init_y_acceleration: 0.1
   last_y_acceleration: 0.9
   bouncing_decay_bottom: 0.4
   bouncing_decay_side: 0.8
-  device_acc_multiplier: 5
+  device_acc_multiplier: 2
 
 class Wall extends Sprite
   constructor: (@game, x, y, w, h, image) ->
@@ -21,8 +21,16 @@ class Wall extends Sprite
     @image = @game.assets[image]
 
 class Ball extends Sprite
-  constructor: (@game) ->
+  constructor: (@game, label="") ->
     super 64,64
+    @label = new Label label
+    @label.id = "label"
+
+    #label size is always (300,0)
+    @label_offset =
+      x: @width/2 - 150
+      y: @width/4
+
     @moveTo 128, 0
 
     @direction = true
@@ -30,8 +38,16 @@ class Ball extends Sprite
     @acceleration = {'x': 0, 'y': config.init_y_acceleration}
     @image = @game.assets['/img/sp.png']
     @s1 = @game.assets['/sound/s1.mp3']
+    @s2 = @game.assets['/sound/s2.mp3']
+    @s1.volume = 0.5
+    @s2.volume = 0.5
 
     @release = true
+    @text = @label.text
+
+  moveTo: (x,y)->
+    super x,y
+    @label.moveTo x+@label_offset.x, y+@label_offset.y
 
   right: ->
     @release = false
@@ -62,10 +78,16 @@ class Ball extends Sprite
     # x-axis
 
     if @intersect @game.wall_l
+      @label.text = "左"
+      @s2.stop()
+      @s2.play()
       if @velocity.x <0
         @velocity.x = - @velocity.x * config.bouncing_decay_side
 
     else if @intersect @game.wall_r
+      @label.text = "右"
+      @s2.stop()
+      @s2.play()
       if @velocity.x >0
         @velocity.x = - @velocity.x * config.bouncing_decay_side
 
@@ -73,6 +95,7 @@ class Ball extends Sprite
       @acceleration.x = 0
       @velocity.x *= config.key_release_decay
       @velocity.x = Math[if @velocity.x>0 then "floor" else "ceil"] @velocity.x
+      @label.text = @text
 
     else
       @velocity.x += @acceleration.x
@@ -83,9 +106,8 @@ class Ball extends Sprite
 
     if (withins.reduce (x,y)->x or y)
       @bouncing = true
-        # @s1.volume = 0.5
-        # @s1.stop()
-        # @s1.play()
+      @s2.stop()
+      @s2.play()
       @velocity.y = - @velocity.y * config.bouncing_decay_bottom
       @acceleration.y = config.last_y_acceleration
 
@@ -104,29 +126,33 @@ class Ball extends Sprite
     @velocity.y = Math.min @velocity.y, 20
 
     new_y = @y+@velocity.y
+
     if new_y >= ymax
-      new_y = 0
+      new_x = (@game.width-@width)/2
+      new_y = -@height
       @acceleration.y = config.init_y_acceleration
       @bouncing = false
-
-    new_x = Math.round @x+@velocity.x
+      @velocity.y = config.init_y_velocity
+      @s1.stop()
+      @s1.play()
+    else
+      new_x = Math.round @x+@velocity.x
 
     @moveTo new_x, new_y
 
 class MyGame extends Game
   constructor: (width, height)->
+    Sound.enabledInMobileSafari = true
     super width, height
 
     @fps = 24
-    @preload '/img/sp.png'
-    @preload '/img/sidewall.png'
-    @preload '/img/map.png'
-    @preload '/sound/s1.mp3'
-
     addEventListener 'devicemotion', @onMotion, false
 
+    @preload '/img/sp.png', '/img/sidewall.png', '/img/map.png'
+    @preload '/sound/s1.mp3', '/sound/s2.mp3'
+
     @onload = ->
-      @ball = new Ball @
+      @ball = new Ball @, "玉"
 
       @wall_bs = (new Wall @, x  , height-32, 32, 32, '/img/map.png' for x in [0,96,192,288])
 
@@ -149,6 +175,7 @@ class MyGame extends Game
         @update()
 
       @rootScene.addChild @ball
+      @rootScene.addChild @ball.label
       @rootScene.addChild wall_b for wall_b in @wall_bs
       @rootScene.addChild @wall_l
       @rootScene.addChild @wall_r
