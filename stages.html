@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Stages</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+
+    <script src="js/json2.js"></script>
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+
+    <script src="http://documentcloud.github.com/backbone/backbone-min.js"></script>
+    <script src="js/backbone.localStorage-min.js"></script>
+<!--
+    <script src="js/backbone.js"></script>
+    <script src="js/backbone.localStorage.js"></script>
+-->
+
+    <script src="http://jashkenas.github.com/coffee-script/extras/coffee-script.js"></script>
+    <script type="text/coffeescript" src="src/stages.coffee"></script>
+
+
+    </head>
+  <body>
+
+    <div id="todoapp">
+      <div class="title">
+        <h1>Stages</h1>
+      </div>
+
+      <div class="content">
+        <div id="stages">
+          <ul id="stage-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates -->
+
+    <script type="text/template" id="item-template">
+      <div class="stage <%= done ? 'done' : '' %>">
+        <div class="display">
+          <div class="stage-content"></div>
+        </div>
+      </div>
+    </script>
+
+
+ </ul>
+  </body>
+</html>

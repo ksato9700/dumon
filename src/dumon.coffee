@@ -105,6 +105,7 @@ class Ball extends Sprite
     withins = (@within wall_b for wall_b in @game.wall_bs)
 
     if (withins.reduce (x,y)->x or y)
+      @label.text = "衝突";
       @bouncing = true
       @s2.stop()
       @s2.play()
