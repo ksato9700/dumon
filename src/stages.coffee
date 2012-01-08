@@ -47,6 +47,8 @@ class window.StageList extends Backbone.Collection
 
 window.Stages = new StageList
 
+_tablehead = "<tr><th>#</th><th>背景</th><th>BGM</th><th>落ち物</th><th>箱</th></tr>"
+
 class window.StageView extends Backbone.View
   tagName: "li"
   template: _.template $('#item-template').html()
@@ -60,6 +62,8 @@ class window.StageView extends Backbone.View
   render: ->
     $(@el).html @template @model.toJSON()
     @setTitle()
+    $("#scenes").empty()
+    $("#scenes").append $(_tablehead)
     for scene in @model.scenes
       $("#scenes").append @s_template scene
     @

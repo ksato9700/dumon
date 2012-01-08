@@ -48,11 +48,9 @@
           </div>
 	</div>
 	<div class="content">
-	  <ol id="scenes">
-	  </ol>
+	  <table id="scenes">
+	  </table>
 	</div>
-
-
     </div>
 
     <!-- Templates -->
@@ -66,20 +64,17 @@
     </script>
 
     <script type="text/template" id="scene-template">
-      <li>
-      <dl>
-        <dt>背景</dt><dd><%= bgname(backgroundName) %></dd>
-        <dt>BGM</dt><dd><%= bgmName %></dd>
-	<dt>落ち物</dt><dd>
-        <ol class="scene-droplist">
-	  <% _.each(drops, function(drop){ %> <li><%= hrname(drop.hourKey) + "/" + mtname(drop.minuteKey) %></li> <% }); %>
-	</ol></dd>
-	<dt>箱</dt><dd>
-        <ol class="scene-boxlist">
-	  <% _.each(boxes, function(box){ %> <li><%= hrname(box.hourKey) + "/" + mtname(box.minuteKey) %></li> <% }); %>
-	</ol></dd>
-      </dl>
-      </li>
+      <tr>
+	<td><%= order %></td>
+	<td><%= bgname(backgroundName) %></td>
+        <td><%= bgmName %></td>
+	<td><ol class="scene-droplist">
+	    <% _.each(drops, function(drop){ %> <li><%= hrname(drop.hourKey) + "/" + mtname(drop.minuteKey) %></li> <% }); %>
+        </ol></td>
+	<td><ol class="scene-boxlist">
+	    <% _.each(boxes, function(box){ %> <li><%= hrname(box.hourKey) + "/" + mtname(box.minuteKey) %></li> <% }); %>
+	</ol></td>
+      </tr>
     </script>
 
 
