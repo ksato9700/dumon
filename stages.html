@@ -3,7 +3,20 @@
   <head>
     <meta charset="utf-8">
     <title>Stages</title>
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
+    <style>
+      .container-fluid > .sidebar {
+      position: absolute;
+      top: 0;
+      left: 20px;
+      width: 380px;
+      }
+      .container-fluid > .content {
+      margin-left: 400px;
+      }
+    </style>
+
 
     <script src="js/json2.js"></script>
     <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
@@ -23,29 +36,52 @@
     </head>
   <body>
 
-    <div id="todoapp">
+    <div id="stageapp">
       <div class="title">
         <h1>Stages</h1>
       </div>
 
-      <div class="content">
-        <div id="stages">
-          <ul id="stage-list"></ul>
-        </div>
-      </div>
+      <div class="container-fluid">
+	<div class="sidebar">
+          <div id="stages">
+            <ol id="stage-list"></ol>
+          </div>
+	</div>
+	<div class="content">
+	  <ol id="scenes">
+	  </ol>
+	</div>
+
+
     </div>
 
     <!-- Templates -->
 
     <script type="text/template" id="item-template">
-      <div class="stage <%= done ? 'done' : '' %>">
+      <div class="stage">
         <div class="display">
-          <div class="stage-content"></div>
+          <div class="stage-title"></div>
         </div>
       </div>
     </script>
 
+    <script type="text/template" id="scene-template">
+      <li>
+      <dl>
+        <dt>背景</dt><dd><%= bgname(backgroundName) %></dd>
+        <dt>BGM</dt><dd><%= bgmName %></dd>
+	<dt>落ち物</dt><dd>
+        <ol class="scene-droplist">
+	  <% _.each(drops, function(drop){ %> <li><%= hrname(drop.hourKey) + "/" + mtname(drop.minuteKey) %></li> <% }); %>
+	</ol></dd>
+	<dt>箱</dt><dd>
+        <ol class="scene-boxlist">
+	  <% _.each(boxes, function(box){ %> <li><%= hrname(box.hourKey) + "/" + mtname(box.minuteKey) %></li> <% }); %>
+	</ol></dd>
+      </dl>
+      </li>
+    </script>
 
- </ul>
+
   </body>
 </html>
