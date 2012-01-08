@@ -36,9 +36,9 @@ class Ball extends Sprite
     @direction = true
     @velocity = {'x': 0, 'y': config.init_y_velocity}
     @acceleration = {'x': 0, 'y': config.init_y_acceleration}
-    @image = @game.assets['/img/sp.png']
-    @s1 = @game.assets['/sound/s1.mp3']
-    @s2 = @game.assets['/sound/s2.mp3']
+    @image = @game.assets['img/sp.png']
+    @s1 = @game.assets['sound/s1.mp3']
+    @s2 = @game.assets['sound/s2.mp3']
     @s1.volume = 0.5
     @s2.volume = 0.5
 
@@ -149,16 +149,16 @@ class MyGame extends Game
     @fps = 24
     addEventListener 'devicemotion', @onMotion, false
 
-    @preload '/img/sp.png', '/img/sidewall.png', '/img/map.png'
-    @preload '/sound/s1.mp3', '/sound/s2.mp3'
+    @preload 'img/sp.png', 'img/sidewall.png', 'img/map.png'
+    @preload 'sound/s1.mp3', 'sound/s2.mp3'
 
     @onload = ->
       @ball = new Ball @, "玉"
 
-      @wall_bs = (new Wall @, x  , height-32, 32, 32, '/img/map.png' for x in [0,96,192,288])
+      @wall_bs = (new Wall @, x  , height-32, 32, 32, 'img/map.png' for x in [0,96,192,288])
 
-      @wall_l = new Wall @, 0,       0, 5, height, '/img/sidewall.png'
-      @wall_r = new Wall @, width-5, 0, 5, height, '/img/sidewall.png'
+      @wall_l = new Wall @, 0,       0, 5, height, 'img/sidewall.png'
+      @wall_r = new Wall @, width-5, 0, 5, height, 'img/sidewall.png'
 
       @addEventListener 'rightbuttondown', (e)->
         @ball.right()
