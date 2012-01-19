@@ -73,7 +73,7 @@ class window.StageView extends Backbone.View
 
   setTitle: ->
     el_title = @$('.stage-title')
-    el_title.text @model.get 'value'
+    el_title.text @model.get 'title'
     el_title.attr "id", @model.id
     el_title.append $("<span/>").addClass("label success").text "New"
 
