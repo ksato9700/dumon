@@ -47,25 +47,28 @@ class window.StageList extends Backbone.Collection
 
 window.Stages = new StageList
 
-_tablehead = "<tr><th>#</th><th>背景</th><th>BGM</th><th>落ち物</th><th>箱</th></tr>"
+_tableheads =
+  "clock": "<tr><th>#</th><th>背景</th><th>BGM</th><th>落ち物</th><th>箱</th></tr>"
+  "multichoice": "<tr><th>#</th><th>問題</th><th>選択肢</th><th>答え</th></tr>"
 
 class window.StageView extends Backbone.View
   tagName: "li"
   template: _.template $('#item-template').html()
-  s_template: _.template $('#scene-template').html()
 
   initialize: ->
     _.bindAll @, 'render', 'close'
     @model.bind 'change', @render
     @model.view = @
+    @s_template = _.template $('#scene-template-' + "#{@model.attributes.format}").html()
 
   render: ->
     $(@el).html @template @model.toJSON()
     @setTitle()
-    $("#scenes").empty()
-    $("#scenes").append $(_tablehead)
-    for scene in @model.scenes
-      $("#scenes").append @s_template scene
+    if @model.scenes.length > 0
+      $("#scenes").empty()
+      $("#scenes").append $(_tableheads[@model.attributes.format])
+      for scene in @model.scenes
+        $("#scenes").append @s_template scene
     @
 
   close: ->

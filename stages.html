@@ -63,7 +63,7 @@
       </div>
     </script>
 
-    <script type="text/template" id="scene-template">
+    <script type="text/template" id="scene-template-clock">
       <tr>
 	<td><%= order %></td>
 	<td><%= bgname(backgroundName) %></td>
@@ -74,6 +74,15 @@
 	<td><ol class="scene-boxlist">
 	    <% _.each(boxes, function(box){ %> <li><%= hrname(box.hourKey) + "/" + mtname(box.minuteKey) %></li> <% }); %>
 	</ol></td>
+      </tr>
+    </script>
+
+    <script type="text/template" id="scene-template-multichoice">
+      <tr>
+	<td><%= order %></td>
+	<td><%= question %></td>
+	<td><%= answers %></td>
+        <td><%= answers[answer] %></td>
       </tr>
     </script>
 
