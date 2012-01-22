@@ -1,0 +1,46 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+#ball_label {
+    font-size: 200%;
+    text-align: center;
+}
+
+div.wall_side {
+    background-image: linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);
+    background-image: -o-linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);
+    background-image: -moz-linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);
+    background-image: -webkit-linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);
+    background-image: -ms-linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);
+    background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.39, rgb(104,120,146)),
+	color-stop(0.7, rgb(136,156,176)),
+	color-stop(0.85, rgb(164,188,212))
+    );
+}
+
+div.wall_bottom {
+    background-image: linear-gradient(bottom, rgb(104,120,146) 85%, rgb(136,156,176) 93%, rgb(164,188,212) 99%);
+    background-image: -o-linear-gradient(bottom, rgb(104,120,146) 85%, rgb(136,156,176) 93%, rgb(164,188,212) 99%);
+    background-image: -moz-linear-gradient(bottom, rgb(104,120,146) 85%, rgb(136,156,176) 93%, rgb(164,188,212) 99%);
+    background-image: -webkit-linear-gradient(bottom, rgb(104,120,146) 85%, rgb(136,156,176) 93%, rgb(164,188,212) 99%);
+    background-image: -ms-linear-gradient(bottom, rgb(104,120,146) 85%, rgb(136,156,176) 93%, rgb(164,188,212) 99%);
+    background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.85, rgb(104,120,146)),
+	color-stop(0.93, rgb(136,156,176)),
+	color-stop(0.99, rgb(164,188,212))
+    );
+}
+
+.bang {
+    color: red;
+}
+

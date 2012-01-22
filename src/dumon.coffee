@@ -15,16 +15,17 @@ config =
   device_acc_multiplier: 2
 
 class Wall extends Sprite
-  constructor: (@game, x, y, w, h, image) ->
+  constructor: (@game, x, y, w, h, klass) ->
     super w, h
     @moveTo x, y
-    @image = @game.assets[image]
+    console.log @._element
+    @._element.className = klass
 
 class Ball extends Sprite
   constructor: (@game, label="") ->
     super 64,64
     @label = new Label label
-    @label.id = "label"
+    @label.id = "ball_label"
 
     #label size is always (300,0)
     @label_offset =
@@ -37,10 +38,6 @@ class Ball extends Sprite
     @velocity = {'x': 0, 'y': config.init_y_velocity}
     @acceleration = {'x': 0, 'y': config.init_y_acceleration}
     @image = @game.assets['img/sp.png']
-    @s1 = @game.assets['sound/s1.mp3']
-    @s2 = @game.assets['sound/s2.mp3']
-    @s1.volume = 0.5
-    @s2.volume = 0.5
 
     @release = true
     @text = @label.text
@@ -78,16 +75,10 @@ class Ball extends Sprite
     # x-axis
 
     if @intersect @game.wall_l
-      @label.text = "左"
-      @s2.stop()
-      @s2.play()
       if @velocity.x <0
         @velocity.x = - @velocity.x * config.bouncing_decay_side
 
     else if @intersect @game.wall_r
-      @label.text = "右"
-      @s2.stop()
-      @s2.play()
       if @velocity.x >0
         @velocity.x = - @velocity.x * config.bouncing_decay_side
 
@@ -95,7 +86,7 @@ class Ball extends Sprite
       @acceleration.x = 0
       @velocity.x *= config.key_release_decay
       @velocity.x = Math[if @velocity.x>0 then "floor" else "ceil"] @velocity.x
-      @label.text = @text
+      @label._element.className = ""
 
     else
       @velocity.x += @acceleration.x
@@ -105,10 +96,8 @@ class Ball extends Sprite
     withins = (@within wall_b for wall_b in @game.wall_bs)
 
     if (withins.reduce (x,y)->x or y)
-      @label.text = "衝突";
+      @label._element.className = "bang"
       @bouncing = true
-      @s2.stop()
-      @s2.play()
       @velocity.y = - @velocity.y * config.bouncing_decay_bottom
       @acceleration.y = config.last_y_acceleration
 
@@ -134,8 +123,6 @@ class Ball extends Sprite
       @acceleration.y = config.init_y_acceleration
       @bouncing = false
       @velocity.y = config.init_y_velocity
-      @s1.stop()
-      @s1.play()
     else
       new_x = Math.round @x+@velocity.x
 
@@ -149,16 +136,15 @@ class MyGame extends Game
     @fps = 24
     addEventListener 'devicemotion', @onMotion, false
 
-    @preload 'img/sp.png', 'img/sidewall.png', 'img/map.png'
-    @preload 'sound/s1.mp3', 'sound/s2.mp3'
+    @preload 'img/sp.png'
 
     @onload = ->
-      @ball = new Ball @, "玉"
+      @ball = new Ball @, ""
 
-      @wall_bs = (new Wall @, x  , height-32, 32, 32, 'img/map.png' for x in [0,96,192,288])
+      @wall_bs = (new Wall @, x*96, height-32, 32, 32, "wall_bottom" for x in [0..3])
 
-      @wall_l = new Wall @, 0,       0, 5, height, 'img/sidewall.png'
-      @wall_r = new Wall @, width-5, 0, 5, height, 'img/sidewall.png'
+      @wall_l = new Wall @, 0,       0, 5, height-32, "wall_side"
+      @wall_r = new Wall @, width-5, 0, 5, height-32, "wall_side"
 
       @addEventListener 'rightbuttondown', (e)->
         @ball.right()
@@ -181,11 +167,11 @@ class MyGame extends Game
       @rootScene.addChild @wall_l
       @rootScene.addChild @wall_r
 
-      @label_x = new Label "X"
+      @label_x = new Label "DEBUG"
       @label_x.x = 20
       @rootScene.addChild @label_x
 
-      @rootScene.backgroundColor = 'rgb(182, 255, 255)'
+      @rootScene.backgroundColor = 'AliceBlue'
 
     @start()
 
@@ -206,6 +192,3 @@ class MyGame extends Game
 
 window.onload = ->
   game = new MyGame 320, 320
-
-
-
