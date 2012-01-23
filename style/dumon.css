@@ -8,6 +8,11 @@ html, body {
     text-align: center;
 }
 
+.answers {
+    font-size: 150%;
+    text-align: center;
+}
+
 div.wall_side {
     background-image: linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);
     background-image: -o-linear-gradient(bottom, rgb(104,120,146) 39%, rgb(136,156,176) 70%, rgb(164,188,212) 85%);

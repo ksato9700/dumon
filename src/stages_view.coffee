@@ -59,14 +59,14 @@ class window.StageView extends Backbone.View
     _.bindAll @, 'render', 'close'
     @model.bind 'change', @render
     @model.view = @
-    @s_template = _.template $('#scene-template-' + "#{@model.attributes.format}").html()
+    @s_template = _.template $('#scene-template-' + "#{@model.get 'format'}").html()
 
   render: ->
     $(@el).html @template @model.toJSON()
     @setTitle()
     if @model.scenes.length > 0
       $("#scenes").empty()
-      $("#scenes").append $(_tableheads[@model.attributes.format])
+      $("#scenes").append $(_tableheads[@model.get 'format'])
       for scene in @model.scenes
         $("#scenes").append @s_template scene
     @
@@ -78,8 +78,10 @@ class window.StageView extends Backbone.View
     el_title = @$('.stage-title')
     el_title.text @model.get 'title'
     el_title.attr "id", @model.id
-    el_title.append $("<span/>").addClass("label success").text "New"
-
+    if (@model.get 'format') is 'multichoice'
+      el_title.append $("<span/>").addClass("label success").text "New"
+      el_title.append ($("<span/>").addClass("label important").text "Play").click =>
+        location.href = "/dumon/\##{@model.id}"
 
 class window.AppView extends Backbone.View
   el: $("#stageapp")

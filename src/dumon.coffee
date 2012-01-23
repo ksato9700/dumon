@@ -14,11 +14,39 @@ config =
   bouncing_decay_side: 0.8
   device_acc_multiplier: 2
 
+class Timer
+  constructor: ->
+    @reset()
+
+  reset: ->
+    @start = new Date()
+
+  lap: ->
+    elapsed = new Date (new Date() - @start)
+    min = elapsed.getMinutes()
+    if min<10
+      min = "0" + min.toString()
+    sec = elapsed.getSeconds()
+    if sec<10
+      sec = "0" + sec.toString()
+    mil = elapsed.getMilliseconds()
+    if mil<10
+      mil = "00" + mil.toString()
+    else if mil<100
+      mil = "0" + mil.toString()
+    "#{min}:#{sec}.#{mil}"
+
 class Wall extends Sprite
   constructor: (@game, x, y, w, h, klass) ->
     super w, h
     @moveTo x, y
-    console.log @._element
+    @._element.className = klass
+
+class Answer extends Label
+  constructor: (@game, x, y, klass) ->
+    super ""
+    x = x - 150 + 32
+    @moveTo x, y
     @._element.className = klass
 
 class Ball extends Sprite
@@ -31,16 +59,23 @@ class Ball extends Sprite
     @label_offset =
       x: @width/2 - 150
       y: @width/4
+    @image = @game.assets['img/sp.png']
+    @full_reset()
 
-    @moveTo 128, 0
+    @xmax = @game.width
+    @ymax = @game.height
 
+  full_reset: ->
+    @reset()
+    @moveTo (@game.width-@width)/2, -@height
+
+  reset: ->
     @direction = true
     @velocity = {'x': 0, 'y': config.init_y_velocity}
     @acceleration = {'x': 0, 'y': config.init_y_acceleration}
-    @image = @game.assets['img/sp.png']
 
     @release = true
-    @text = @label.text
+    @bouncing = false
 
   moveTo: (x,y)->
     super x,y
@@ -65,10 +100,7 @@ class Ball extends Sprite
       @acceleration.x = -config.key_init_x_acceleration
 
   update: ->
-    #@game.label_x.text = "#{@direction}"
-    @game.label_x.text = "#{@release}"
-    xmax = @game.width
-    ymax = @game.height
+    @game.label_t.text = "#{@game.timer.lap()}"
 
     @frame = (if @direction then @frame-1 else @frame+1) % @game.fps
 
@@ -117,26 +149,31 @@ class Ball extends Sprite
 
     new_y = @y+@velocity.y
 
-    if new_y >= ymax
-      new_x = (@game.width-@width)/2
-      new_y = -@height
-      @acceleration.y = config.init_y_acceleration
-      @bouncing = false
-      @velocity.y = config.init_y_velocity
+    if new_y >= @ymax
+      if @game.check((@x-32)/96)
+        @full_reset()
+        @game.next()
+      else
+        @reset()
+        @velocity.y = -13
+        @acceleration.y = 0.3
     else
       new_x = Math.round @x+@velocity.x
-
-    @moveTo new_x, new_y
+      @moveTo new_x, new_y
 
 class MyGame extends Game
   constructor: (width, height)->
     Sound.enabledInMobileSafari = true
     super width, height
 
+    @timer = new Timer()
+
     @fps = 24
     addEventListener 'devicemotion', @onMotion, false
 
     @preload 'img/sp.png'
+
+    @scene = 0
 
     @onload = ->
       @ball = new Ball @, ""
@@ -145,6 +182,8 @@ class MyGame extends Game
 
       @wall_l = new Wall @, 0,       0, 5, height-32, "wall_side"
       @wall_r = new Wall @, width-5, 0, 5, height-32, "wall_side"
+
+      @answers = (new Answer @, x*96+32, height-32, "answers" for x in [0..2])
 
       @addEventListener 'rightbuttondown', (e)->
         @ball.right()
@@ -166,12 +205,26 @@ class MyGame extends Game
       @rootScene.addChild wall_b for wall_b in @wall_bs
       @rootScene.addChild @wall_l
       @rootScene.addChild @wall_r
+      @rootScene.addChild answer for answer in @answers
 
-      @label_x = new Label "DEBUG"
-      @label_x.x = 20
-      @rootScene.addChild @label_x
+      @label_p = new Label "Progress"
+      @label_p.x = 20
+      @rootScene.addChild @label_p
+
+      @label_t = new Label "Time"
+      @label_t.x = 60
+      @rootScene.addChild @label_t
 
       @rootScene.backgroundColor = 'AliceBlue'
+
+      id=location.hash.replace("#","")
+      Stages.ajaxFetch
+        success: =>
+          model = Stages.get id
+          model.getDetails
+            success: (model, resp)=>
+              @scenes = model.scenes
+              @next()
 
     @start()
 
@@ -189,6 +242,23 @@ class MyGame extends Game
           @ball.direction = true
         else
           @ball.direction = false
+
+  check:(answer) ->
+    answer is @answer
+
+  next: ->
+    s = @scenes[@scene]
+    if s is undefined
+      @stop()
+    else
+      @ball.label.text = s.question
+      @answers[i].text = s.answers[i] for i in [0..2]
+      @answer = s.answer
+
+      @scene += 1
+      @label_p.text = "#{@scene}/#{@scenes.length}"
+
+      return false
 
 window.onload = ->
   game = new MyGame 320, 320
