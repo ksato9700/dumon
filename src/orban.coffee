@@ -5,11 +5,12 @@ enchant()
 
 config =
   key_init_acceleration: 2.5
-  key_init_velocity: 2
-  key_release_decay: 0.98
+  key_init_velocity: 10
+  area_decay: 0.4
   last_y_acceleration: 0.0
-  bouncing_decay: 0.8
-  device_acc_multiplier: 2
+  bouncing_decay: 1
+  device_acc_multiplier: 5
+  opacity_decay: 0.8
 
 class Timer
   constructor: ->
@@ -49,6 +50,15 @@ class Answer extends Label
 class Area
   constructor: (@game, @idx, @x, @y, @width, @height) ->
 
+  in_area: (ball) ->
+    if ball.x == @x and ball.y == @y
+      ball.velocity.x = 0
+      ball.velocity.y = 0
+      ball.opacity = 0.99
+    else
+      ball.velocity.x = ball.velocity.x * config.area_decay + (@x - ball.x)
+      ball.velocity.y = ball.velocity.y * config.area_decay + (@y - ball.y)
+
 class Ball extends Sprite
   constructor: (@game, label="") ->
     super 64,64
@@ -70,6 +80,7 @@ class Ball extends Sprite
     @direction = true
     @velocity = {'x': 0, 'y': 0}
     @acceleration = {'x': 0, 'y': 0}
+    @opacity = 1.0
 
     @release = true
     @bouncing = false
@@ -112,9 +123,23 @@ class Ball extends Sprite
       @velocity.x -=  config.key_init_velocity
       @acceleration.x = -config.key_init_acceleration
 
+  touch: (event, type)->
+    if type is 'start'
+      @touch_start = {x: event.x, y: event.y, frame: @game.frame}
+    else
+      frames = @game.frame - @touch_start.frame
+      @velocity.x = (event.x - @touch_start.x)/frames
+      @velocity.y = (event.y - @touch_start.y)/frames
+
   update: ->
     @game.label_t.text = "#{@game.timer.lap()}"
     @frame = (if @direction then @frame-1 else @frame+1) % @game.fps
+
+    if @opacity < 1.0
+      @opacity *= config.opacity_decay
+      if @opacity < 0.01
+        @full_reset()
+      return
 
     if @intersect @game.wall_l
       if @velocity.x <0
@@ -135,23 +160,21 @@ class Ball extends Sprite
     if @release
       @acceleration.x = 0
       @acceleration.y = 0
-      for area in @game.areas
-        if @within area
-          @velocity.x += (area.x-@x)/24
-          @velocity.y += (area.y-@y)/24
 
-      @velocity.x *= config.key_release_decay
+      for area in @game.areas
+        if @within area, 32
+          area.in_area @
+
       @velocity.x = Math[if @velocity.x>0 then "floor" else "ceil"] @velocity.x
-      @velocity.y *= config.key_release_decay
       @velocity.y = Math[if @velocity.y>0 then "floor" else "ceil"] @velocity.y
 
     else
       @velocity.x += @acceleration.x
       @velocity.y += @acceleration.y
 
-    #new_x = Math.round @x+@velocity.x
-    new_x = @x
+    new_x = Math.round @x+@velocity.x
     new_y = Math.round @y+@velocity.y
+
     @moveTo new_x, new_y
 
 
@@ -163,8 +186,6 @@ class MyGame extends Game
     @timer = new Timer()
 
     @fps = 24
-    addEventListener 'devicemotion', @onMotion, false
-
     @preload 'img/sp.png'
 
     @scene = 0
@@ -173,9 +194,9 @@ class MyGame extends Game
       @ball = new Ball @, ""
 
       @areas = [
-        (new Area @, 0, @width/2, -80, 160, 160),
-        (new Area @, 1, -80, @height-80, 160, 160),
-        (new Area @, 2, @width-80, @height-80, 160, 160)
+        (new Area @, 0, @width/2-32, 32, 64, 64),
+        (new Area @, 1, 32, @height-96, 64, 64),
+        (new Area @, 2, @width-96, @height-96, 64, 64)
       ]
 
       @wall_l = new Wall @, 0,       0, 5, height, "wall_side"
@@ -212,6 +233,15 @@ class MyGame extends Game
       @ball.addEventListener 'enterframe', (e)->
         @update()
 
+      @ball.addEventListener 'touchstart', (e)->
+        @touch e, 'start'
+
+      #@ball.addEventListener 'touchmove', (e)->
+      #  @touch e, 'move'
+
+      @ball.addEventListener 'touchend', (e)->
+        @touch e, 'end'
+
       @rootScene.addChild @ball
       @rootScene.addChild @ball.label
       @rootScene.addChild @wall_l
@@ -243,22 +273,6 @@ class MyGame extends Game
               @next()
 
     @start()
-
-  onMotion: (event)=>
-    if event
-      acc = event.acceleration
-      acg = event.accelerationIncludingGravity
-      rot = event.rotationRate
-      itv = event.interval
-
-      if not @ball.bouncing
-        @ball.velocity.x = acg.x * config.device_acc_multiplier
-        @ball.velocity.y = acg.y * config.device_acc_multiplier
-
-        if acg.x > 0
-          @ball.direction = true
-        else
-          @ball.direction = false
 
   check:(answer) ->
     answer is @answer
