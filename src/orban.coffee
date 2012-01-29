@@ -149,7 +149,8 @@ class Ball extends Sprite
       @velocity.x += @acceleration.x
       @velocity.y += @acceleration.y
 
-    new_x = Math.round @x+@velocity.x
+    #new_x = Math.round @x+@velocity.x
+    new_x = @x
     new_y = Math.round @y+@velocity.y
     @moveTo new_x, new_y
 
