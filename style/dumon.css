@@ -45,6 +45,21 @@ div.wall_bottom {
     );
 }
 
+.circle {
+    width:64px;
+    height:64px;
+    display:Thistle;
+    border-radius:32px;
+    -moz-border-radius:32px;
+    -webkit-border-radius:32px;
+    -khtml-border-radius:32px;
+    font-size:20px;
+    color:navy;
+    line-height:64px;
+    text-align:center;
+    background:Thistle;
+}
+
 .bang {
     color: red;
 }

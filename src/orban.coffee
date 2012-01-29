@@ -43,15 +43,14 @@ class Wall extends Sprite
     @moveTo x, y
     @._element.className = klass
 
-class Answer extends Label
-  constructor: (@game, x, y, klass) ->
-    super ""
-    x = x - 150 + 32
+class Answer extends Sprite
+  constructor: (@game, @idx, @x, @y, w, h) ->
+    super w, h
     @moveTo x, y
-    @._element.className = klass
+    @._element.className = "circle"
 
-class Area
-  constructor: (@game, @idx, @x, @y, @width, @height) ->
+  set_text: (text)->
+    @._element.innerHTML = text
 
 class Ball extends Sprite
   constructor: (@game, label="") ->
@@ -68,7 +67,7 @@ class Ball extends Sprite
 
   full_reset: ->
     @reset()
-    @moveTo (@game.width-@width)/2, (@game.height-@height)/2
+    @moveTo (@game.width-@width)/2, (@game.height-@height)/2+16
 
   reset: ->
     @direction = true
@@ -121,7 +120,8 @@ class Ball extends Sprite
     if type is 'start'
       @touch_start = {x: event.x, y: event.y, frame: @game.frame}
     else
-      frames = @game.frame - @touch_start.frame
+      frames = @game.frame - @touch_start.frame + 1
+
       @velocity.x = (event.x - @touch_start.x)/frames
       @velocity.y = (event.y - @touch_start.y)/frames
 
@@ -133,7 +133,7 @@ class Ball extends Sprite
 
   in_area: (area) ->
     if @x == area.x and @y == area.y
-      if @game.check()
+      if @game.check(area.idx)
         @velocity.x = 0
         @velocity.y = 0
         @opacity = 0.99
@@ -180,7 +180,7 @@ class Ball extends Sprite
       @acceleration.y = 0
 
       still_in_area = false
-      for area in @game.areas
+      for area in @game.answers
         if @within area, 32
           if not @in_escape
             @in_area area
@@ -204,7 +204,6 @@ class Ball extends Sprite
 
     @moveTo new_x, new_y
 
-
 class MyGame extends Game
   constructor: (width, height)->
     Sound.enabledInMobileSafari = true
@@ -220,18 +219,16 @@ class MyGame extends Game
     @onload = ->
       @ball = new Ball @, ""
 
-      @areas = [
-        (new Area @, 0, @width/2-32, 32, 64, 64),
-        (new Area @, 1, 32, @height-96, 64, 64),
-        (new Area @, 2, @width-96, @height-96, 64, 64)
+      @answers = [
+        (new Answer @, 0, @width/2-32, 32, 64, 64),
+        (new Answer @, 1, 32, @height-96, 64, 64),
+        (new Answer @, 2, @width-96, @height-96, 64, 64)
       ]
 
       @wall_l = new Wall @, 0,       0, 5, height, "wall_side"
       @wall_r = new Wall @, width-5, 0, 5, height, "wall_side"
       @wall_t = new Wall @, 0,       0, width, 5, "wall_side"
       @wall_b = new Wall @, 0, height-5, width, 5, "wall_side"
-
-      @answers = (new Answer @, x*96+32, height-32, "answers" for x in [0..2])
 
       @addEventListener 'rightbuttondown', (e)->
         @ball.wrong_answer = false
@@ -277,14 +274,14 @@ class MyGame extends Game
       @ball.addEventListener 'touchend', (e)->
         @touch e, 'end'
 
+      @rootScene.addChild answer for answer in @answers
+
       @rootScene.addChild @ball
       @rootScene.addChild @ball.label
       @rootScene.addChild @wall_l
       @rootScene.addChild @wall_r
       @rootScene.addChild @wall_t
       @rootScene.addChild @wall_b
-
-      @rootScene.addChild answer for answer in @answers
 
       @label_p = new Label ""
       @label_p.x = 20
@@ -307,11 +304,12 @@ class MyGame extends Game
               @scenes = model.scenes
               @next()
 
+    @answer = 1
     @start()
 
   check:(answer) ->
-    false
-    #answer is @answer
+    console.log answer, @answer
+    answer is @answer
 
   next: ->
     s = @scenes[@scene]
@@ -319,11 +317,11 @@ class MyGame extends Game
       @stop()
     else
       @ball.label.text = s.question
-      @answers[i].text = s.answers[i] for i in [0..2]
+      @answers[i].set_text s.answers[i] for i in [0..2]
       @answer = s.answer
 
       @scene += 1
-      #@label_p.text = "#{@scene}/#{@scenes.length}"
+      @label_p.text = "#{@scene}/#{@scenes.length}"
 
       return false
 
