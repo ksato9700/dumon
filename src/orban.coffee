@@ -57,11 +57,12 @@ class Ball extends Sprite
     super 64,64
     @label = new Label label
     @label.id = "ball_label"
+    @label.ball = @
 
     #label size is always (300,0)
     @label_offset =
       x: @width/2 - 150
-      y: @width/4
+      y: @height/8
     @image = @game.assets['img/sp.png']
     @full_reset()
 
@@ -152,6 +153,7 @@ class Ball extends Sprite
     if @opacity < 1.0
       @opacity *= config.opacity_decay
       if @opacity < 0.01
+        @game.next()
         @full_reset()
       return
 
@@ -230,6 +232,14 @@ class MyGame extends Game
       @wall_t = new Wall @, 0,       0, width, 5, "wall_side"
       @wall_b = new Wall @, 0, height-5, width, 5, "wall_side"
 
+      @rootScene.addChild answer for answer in @answers
+      @rootScene.addChild @ball
+      @rootScene.addChild @ball.label
+      @rootScene.addChild @wall_l
+      @rootScene.addChild @wall_r
+      @rootScene.addChild @wall_t
+      @rootScene.addChild @wall_b
+
       @addEventListener 'rightbuttondown', (e)->
         @ball.wrong_answer = false
         @ball.right()
@@ -265,23 +275,17 @@ class MyGame extends Game
       @ball.addEventListener 'enterframe', (e)->
         @update()
 
+      @ball.label.addEventListener 'touchstart', (e)->
+        @ball.touch e, 'start'
+
+      @ball.label.addEventListener 'touchend', (e)->
+        @ball.touch e, 'end'
+
       @ball.addEventListener 'touchstart', (e)->
         @touch e, 'start'
 
-      #@ball.addEventListener 'touchmove', (e)->
-      #  @touch e, 'move'
-
       @ball.addEventListener 'touchend', (e)->
         @touch e, 'end'
-
-      @rootScene.addChild answer for answer in @answers
-
-      @rootScene.addChild @ball
-      @rootScene.addChild @ball.label
-      @rootScene.addChild @wall_l
-      @rootScene.addChild @wall_r
-      @rootScene.addChild @wall_t
-      @rootScene.addChild @wall_b
 
       @label_p = new Label ""
       @label_p.x = 20
@@ -304,11 +308,9 @@ class MyGame extends Game
               @scenes = model.scenes
               @next()
 
-    @answer = 1
     @start()
 
   check:(answer) ->
-    console.log answer, @answer
     answer is @answer
 
   next: ->
@@ -316,9 +318,10 @@ class MyGame extends Game
     if s is undefined
       @stop()
     else
-      @ball.label.text = s.question
       @answers[i].set_text s.answers[i] for i in [0..2]
       @answer = s.answer
+
+      @ball.label.text = s.question
 
       @scene += 1
       @label_p.text = "#{@scene}/#{@scenes.length}"
